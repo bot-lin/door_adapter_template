@@ -78,7 +78,7 @@ class DoorAdapter(Node):
     def time_cb(self):
         if self.mock_adapter:
             return
-        for door_id, door_data in self.doors.items():
+        for door_id, door_data in self.doors.item   s():
 
             if door_data.check_status is not None:
                 # If continuous_status_polling is enabled, we will only update
