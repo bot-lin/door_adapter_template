@@ -1,4 +1,6 @@
 import time
+from pymodbus.client.sync import ModbusTcpClient
+
 from rmf_door_msgs.msg import DoorMode
 
 class DoorClientAPI:
@@ -9,6 +11,7 @@ class DoorClientAPI:
         self.connected = False
         self.node = node
         self.config = config  # use this config to establish connection
+        self.client = ModbusTcpClient(self.config['host'], port=self.config['port'])
 
         count = 0
         self.connected = True
@@ -27,21 +30,20 @@ class DoorClientAPI:
         ## ------------------------ ##
         ## IMPLEMENT YOUR CODE HERE ##
         ## ------------------------ ##
-        return False
+        return self.client.connect()
 
     def open_door(self, door_id):
-        ''' Return True if the door API server is successful receive open door command'''
-        ## ------------------------ ##
-        ## IMPLEMENT YOUR CODE HERE ##
-        ## ------------------------ ##
-        return False
+        if not self.connected:
+            return False
+        result = self.client.write_coil(door_id, True)
+        return not result.isError()
 
     def close_door(self, door_id):
-        ''' Return True if the door API server is successful receive open door command'''
-        ## ------------------------ ##
-        ## IMPLEMENT YOUR CODE HERE ##
-        ## ------------------------ ##
-        return False
+        ''' Return True if the door API server is successful receive close door command'''
+        if not self.connected:
+            return False
+        result = self.client.write_coil(door_id, False)
+        return not result.isError()
 
     def get_mode(self, door_id):
         ''' Return the door status with reference rmf_door_msgs. 
@@ -50,7 +52,18 @@ class DoorClientAPI:
             Return DoorMode.MODE_OPEN when door status is open.
             Return DoorMode.MODE_OFFLINE when door status is offline.
             Return DoorMode.MODE_UNKNOWN when door status is unknown'''
-        ## ------------------------ ##
-        ## IMPLEMENT YOUR CODE HERE ##
-        ## ------------------------ ##
-        return False
+        if not self.connected:
+            return DoorMode.MODE_OFFLINE
+        result = self.client.read_holding_registers(door_id, 1)
+        if result.isError():
+            return DoorMode.MODE_UNKNOWN
+        else:
+            value = result.registers[0]
+            if value == 0:
+                return DoorMode.MODE_CLOSED
+            elif value == 1:
+                return DoorMode.MODE_OPEN
+            elif value == 2:
+                return DoorMode.MODE_MOVING
+            else:
+                return DoorMode.MODE_UNKNOWN
