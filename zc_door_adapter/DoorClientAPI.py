@@ -1,5 +1,5 @@
 import time
-from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.client import ModbusTcpClient
 
 from rmf_door_msgs.msg import DoorMode
 
