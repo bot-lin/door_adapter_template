@@ -85,7 +85,7 @@ class DoorAdapter(Node):
         # Once the door command is posted to the door API,
         # the door will be opened and then close after 5 secs    
         while door_data.open_door:
-            success = door_data.api.open_door(door_data.id)
+            success = door_data.api.open_door()
             if success:
                 self.get_logger().info(f"Request to open door [{door_data.id}] is successful")
             else:
