@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'zc_door_adapter = door_adapter.door_adapter:main'
+            'zc_door_adapter = zc_door_adapter.door_adapter:main'
         ],
     },
 )
