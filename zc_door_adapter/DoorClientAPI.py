@@ -1,5 +1,5 @@
 import time
-from pymodbus.client.sync import ModbusTcpClient
+from pyModbusTCP.client import ModbusClient
 
 from rmf_door_msgs.msg import DoorMode
 
@@ -12,7 +12,8 @@ class DoorClientAPI:
         self.debug = False
         self.connected = False
         self.node = node
-        self.client = ModbusTcpClient(ip_address, port=port, timeout=self.timeout)
+        self.client = ModbusClient(ip_address, port=port, timeout=self.timeout, auto_open=True)
+        self.client.open()
 
         count = 0
         self.connected = True
