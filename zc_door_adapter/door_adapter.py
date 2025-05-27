@@ -139,8 +139,7 @@ class DoorAdapter(Node):
         # command to API. When the adapter receives a close request, it will
         # stop sending the open command to API
         self.get_logger().info(
-            f"[{msg.door_name}] Door mode [{msg.requested_mode.value}] '
-            f'requested by {msg.requester_id}"
+            f"[{msg.door_name}] Door mode [{msg.requested_mode.value}] 'requested by {msg.requester_id}"
         )
         if msg.requested_mode.value == DoorMode.MODE_OPEN:
             # open door implementation
