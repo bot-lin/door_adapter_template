@@ -7,11 +7,10 @@ doors:
     door_auto_closes: True # Set to True if door remains closed until requested open, and automatically closes if it does not receive subsequent open requests.
     door_signal_period: 3.0 # Time taken for door signal to be effective, in seconds.
     continuous_status_polling: False # Whether to keep checking door state when there are no requests
+    ip_address: "10.54.65.95" # IP address of the door controller
+    port: 518
     # NOTE: door_close_feature is [DEPRECATED], use door_auto_closes instead
-  "door_2":  # door name and id
-    door_auto_closes: True # Set to True if door remains closed until requested open, and automatically closes if it does not receive subsequent open requests.
-    door_signal_period: 3.0 # # Time taken for door signal to be effective, in seconds.
-    continuous_status_polling: False # Whether to keep checking door state when there are no requests
+
 
 door_subscriber:
   topic_name: "adapter_door_requests"

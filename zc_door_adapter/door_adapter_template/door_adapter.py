@@ -16,13 +16,15 @@ class Door:
                  id,
                  door_auto_closes,
                  door_signal_period,
-                 continuous_status_polling):
+                 continuous_status_polling,
+                 api):
         self.id = id
         self.door_mode = DoorMode.MODE_CLOSED
         self.open_door = False
         self.check_status = None  # set to None if not enabled
         self.door_auto_closes = door_auto_closes
         self.door_signal_period = door_signal_period
+        self.api = api
         if continuous_status_polling:
             self.check_status = False
 
@@ -42,9 +44,9 @@ class DoorAdapter(Node):
 
         # Connect to doors
         if not self.mock_adapter:
-            self.api = DoorClientAPI(self, config_yaml)
+            # self.api = DoorClientAPI(self, config_yaml)
 
-            assert self.api.connected, "Unable to establish connection with door"
+            # assert self.api.connected, "Unable to establish connection with door"
 
             # Keep track of doors
             self.doors = {}
@@ -60,7 +62,14 @@ class DoorAdapter(Node):
                 self.doors[door_id] = Door(door_id,
                                            auto_close,
                                            door_data['door_signal_period'],
-                                           door_data.get('continuous_status_polling', False))
+                                           door_data.get('continuous_status_polling', False),
+                                           DoorClientAPI(self, door_data['ip_address'], door_data['port'])
+                                           )
+                if self.doors[door_id].api.connected:
+                    self.get_logger().info(f"Door [{door_id}] connected successfully")
+                else:
+                    self.get_logger().error(f"Door [{door_id}] connection failed. "
+                                            "Please check the door API server.")
 
         self.door_states_pub = self.create_publisher(
             DoorState, door_pub['topic_name'], 100)
@@ -76,7 +85,7 @@ class DoorAdapter(Node):
         # Once the door command is posted to the door API,
         # the door will be opened and then close after 5 secs    
         while door_data.open_door:
-            success = self.api.open_door(door_data.id)
+            success = door_data.api.open_door(door_data.id)
             if success:
                 self.get_logger().info(f"Request to open door [{door_data.id}] is successful")
             else:
@@ -96,13 +105,13 @@ class DoorAdapter(Node):
                 # request. This implementation reduces the number of calls made
                 # during state update.
                 if door_data.check_status:
-                    door_data.door_mode = self.api.get_mode(door_id)
+                    door_data.door_mode = door_data.api.get_mode()
                     if door_data.door_mode == DoorMode.MODE_CLOSED and not door_data.open_door:
                         door_data.check_status = False
             else:
                 # If continuous_status_polling is not enabled, we'll just
                 # update the door state as it is all the time
-                door_data.door_mode = self.api.get_mode(door_id)
+                door_data.door_mode = door_data.api.get_mode()
             state_msg = DoorState()
             state_msg.door_time = self.get_clock().now().to_msg()
 
@@ -141,7 +150,7 @@ class DoorAdapter(Node):
                 # door state updates
                 door_data.check_status = True
             if not door_data.door_auto_closes:
-                self.api.open_door(msg.door_name)
+                door_data.api.open_door()
             else:
                 t = threading.Thread(target=self.door_open_command_request,
                                      args=(door_data,))
@@ -151,7 +160,7 @@ class DoorAdapter(Node):
             door_data.open_door = False
             self.get_logger().info(f'[{msg.door_name}] Close Command to door received')
             if not door_data.door_auto_closes:
-                self.api.close_door(msg.door_name)
+                door_data.api.close_door()
         else:
             self.get_logger().error('Invalid door mode requested. Ignoring...')
 

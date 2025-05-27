@@ -4,14 +4,15 @@ from pymodbus.client.sync import ModbusTcpClient
 from rmf_door_msgs.msg import DoorMode
 
 class DoorClientAPI:
-    def __init__(self, node, config):
+    def __init__(self, node, 
+                 ip_address, 
+                 port):
         self.name = 'rmf_door_adapter'
         self.timeout = 5  # seconds
         self.debug = False
         self.connected = False
         self.node = node
-        self.config = config  # use this config to establish connection
-        self.client = ModbusTcpClient(self.config['host'], port=self.config['port'])
+        self.client = ModbusTcpClient(ip_address, port=port, timeout=self.timeout)
 
         count = 0
         self.connected = True
@@ -32,20 +33,20 @@ class DoorClientAPI:
         ## ------------------------ ##
         return self.client.connect()
 
-    def open_door(self, door_id):
+    def open_door(self):
         if not self.connected:
             return False
-        result = self.client.write_coil(door_id, True)
+        result = self.client.write_coil(0, True)
         return not result.isError()
 
-    def close_door(self, door_id):
+    def close_door(self):
         ''' Return True if the door API server is successful receive close door command'''
         if not self.connected:
             return False
-        result = self.client.write_coil(door_id, False)
+        result = self.client.write_coil(0, False)
         return not result.isError()
 
-    def get_mode(self, door_id):
+    def get_mode(self):
         ''' Return the door status with reference rmf_door_msgs. 
             Return DoorMode.MODE_CLOSED when door status is closed.
             Return DoorMode.MODE_MOVING when door status is moving.
@@ -54,16 +55,13 @@ class DoorClientAPI:
             Return DoorMode.MODE_UNKNOWN when door status is unknown'''
         if not self.connected:
             return DoorMode.MODE_OFFLINE
-        result = self.client.read_holding_registers(door_id, 1)
+        result = self.client.read_discrete_inputs(0, 1)
         if result.isError():
-            return DoorMode.MODE_UNKNOWN
+            return DoorMode.MODE_OFFLINE
         else:
-            value = result.registers[0]
-            if value == 0:
-                return DoorMode.MODE_CLOSED
-            elif value == 1:
+            value = result.bits[0]
+            if value:
                 return DoorMode.MODE_OPEN
-            elif value == 2:
-                return DoorMode.MODE_MOVING
             else:
-                return DoorMode.MODE_UNKNOWN
+                return DoorMode.MODE_CLOSED
+            
