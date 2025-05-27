@@ -6,7 +6,7 @@ import time
 import threading
 
 import rclpy
-from DoorClientAPI import DoorClientAPI
+from zc_door_adapter.DoorClientAPI import DoorClientAPI
 from rclpy.node import Node
 from rmf_door_msgs.msg import DoorRequest, DoorState, DoorMode
 
