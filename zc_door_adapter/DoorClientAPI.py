@@ -55,7 +55,7 @@ class DoorClientAPI:
             Return DoorMode.MODE_UNKNOWN when door status is unknown'''
         if not self.connected:
             return DoorMode.MODE_OFFLINE
-        result = self.client.read_discrete_inputs(0, 1)
+        result = self.client.read_discrete_inputs(address=0, count=1)
         if result.isError():
             return DoorMode.MODE_OFFLINE
         else:
